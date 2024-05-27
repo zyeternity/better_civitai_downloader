@@ -40,20 +40,22 @@ def init(configpath):
     cf = configparser.ConfigParser()
     
     cf.read(configpath, encoding="utf-8")
-
+    if cf.sections() == []:
+        print("Can't found ",configpath)
+        exit(0)
     models_folder = cf['Basic']['models_save_folder']
     if cf['Basic']['civitai_token'] != 'None':
         civitai_token = cf['Basic']['civitai_token']
 
     
-    updated_metadata = cf['Metadata']['updated_metadata']
-    backup_metadata = cf['Metadata']['backup_metadata']
+    updated_metadata = (cf['Metadata']['updated_metadata'] == 'True')
+    backup_metadata = (cf['Metadata']['backup_metadata'] == 'True')
 
-    skip_duplicate_models = cf['Models']['skip_duplicate_models']
-    use_subfolder = cf['Models']['use_subfolder']
+    skip_duplicate_models = (cf['Models']['skip_duplicate_models'] == 'True')
+    use_subfolder = (cf['Models']['use_subfolder'] == 'True')
 
-    skip_duplicate_images = cf['Image']['skip_duplicate_images']
-    redownload_corrupted = cf['Image']['redownload_corrupted']
+    skip_duplicate_images = (cf['Image']['skip_duplicate_images'] == 'True')
+    redownload_corrupted = (cf['Image']['redownload_corrupted'] == 'True')
     
     # Add token -> headers
     if civitai_token is not None:
@@ -271,7 +273,7 @@ os.chdir(cwd)
 
 
 while True:
-    if sys.argv == 2: 
+    if len(sys.argv) >= 2: 
         init(sys.argv[1]) # Initialization (read configuration file and prepare request headers)
     else:
         init("config.ini")
