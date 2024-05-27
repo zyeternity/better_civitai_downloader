@@ -28,22 +28,29 @@ Feel free to contribute to the project. Right now this is a big mess that needs 
 If you have any problems or bug reports just open a new issue and I'll check it when I have time.
 
 ## Slightly "advanced":
-You can change options by editing the code (this will be a config.json in the future): 
+You can change options by editing the code in config.ini
 ```
 # Basic config
-models_folder = "models" # This doesn't work with full paths. It will just change the folder name.
-civitai_token = None # If you want to increase your rate limits on Civitai, get your API token (from account setings) and put it there as a string
-# Please be careful if you are using it and plan to do a push request.
+[Basic]
+#This doesn't work with full paths. It will just change the folder name.(But using full paths worked in my environment --lzyeternity)
+models_save_folder=models
+#If you want to increase your rate limits on Civitai, get your API token (from account setings) and put it there as a string OR "None"
+civitai_token=None
 
 # Metadata Options
-updated_metadata = True
-backup_metadata = True
+[Metadata]
+updated_metadata=True
+backup_metadata=True
 
 # Models Options
-skip_duplicate_models = True
-use_subfolder = False # This save will models (.safetensors, .ckpt etc) under a subfolder named "files"
+[Models] 
+skip_duplicate_models=True
+use_subfolder=False
 
 # Image Options
-skip_duplicate_images = True
-redownload_corrupted = False # Most of times corrupted files don't exist on Civitai anymore, but the API still return them when you request the model's metadata```
+[Image] 
+skip_duplicate_images=True
+# Most of times corrupted files don't exist on Civitai anymore, but the API still return them when you request the model's metadata
+redownload_corrupted=False 
+metadata```
 
