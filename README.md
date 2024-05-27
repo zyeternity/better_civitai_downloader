@@ -16,7 +16,7 @@ I don't plan to add functionality to download the entire site, if you want to do
 This guide assumes you have basic knowledge on how to run python code and use cmd/powershell. If you don't, please search on youtube first.
 
 - Clone or download this repo.
-  - `git clone https://github.com/4zure0/civitai_downloader.git`
+  - `git clone https://github.com/zyeternity/better_civitai_downloader`
 - Make sure you have python installed. Although it might run on other versions, it was made to run on python 3.10. You can check your version with `python --version`
 - Install dependencies with pip. To do that navigate to the folder you downloaded this repository and run `python -m pip install -r requirements.txt` on powershell/cmd.
 - Run civitai_downloader.py with `python civitai_downloader.py`
