@@ -5,6 +5,59 @@ import requests
 import os
 import urllib
 import tqdm
+import sys
+import configparser
+
+# Basic config
+models_folder = "models" # This doesn't work with full paths. It will just change the folder name.
+civitai_token = None # If you want to increase your rate limits on Civitai, get your API token (from account setings) and put it there as a string
+# Please be careful if you are using it and plan to do a push request.
+
+# Metadata Options
+updated_metadata = True
+backup_metadata = True
+
+# Models Options
+skip_duplicate_models = True
+use_subfolder = False # This will save models (.safetensors, .ckpt etc) under a subfolder named "files"
+
+# Image Options
+skip_duplicate_images = True
+redownload_corrupted = False # Most of times corrupted files don't exist on Civitai anymore, but the API still return them when you request the model's metadata
+
+
+# URL format: https://civitai.com/api/v1/models/
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Referer': 'https://www.civitai.com/',
+    'Content-Type': 'application/json'
+    }
+def init(configpath):
+    global models_folder, civitai_token, updated_metadata, backup_metadata, skip_duplicate_models, use_subfolder, skip_duplicate_images, redownload_corrupted
+    global headers
+    #Read Config File
+    cf = configparser.ConfigParser()
+    
+    cf.read(configpath, encoding="utf-8")
+
+    models_folder = cf['Basic']['models_save_folder']
+    if cf['Basic']['civitai_token'] != 'None':
+        civitai_token = cf['Basic']['civitai_token']
+
+    
+    updated_metadata = cf['Metadata']['updated_metadata']
+    backup_metadata = cf['Metadata']['backup_metadata']
+
+    skip_duplicate_models = cf['Models']['skip_duplicate_models']
+    use_subfolder = cf['Models']['use_subfolder']
+
+    skip_duplicate_images = cf['Image']['skip_duplicate_images']
+    redownload_corrupted = cf['Image']['redownload_corrupted']
+    
+    # Add token -> headers
+    if civitai_token is not None:
+        headers['Authorization'] = f'Basic {civitai_token}'
 
 def getFileSize(path) -> int:
     return os.stat(path).st_size
@@ -33,15 +86,7 @@ def extract_id(url: str) -> str: # returns model id from a url
     return model_id
 
 def get_metadata(model_id: str, civitai_token = None) -> dict: # returns metadata from civitai API
-    # URL format: https://civitai.com/api/v1/models/
-    headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Referer': 'https://www.civitai.com/',
-    'Content-Type': 'application/json'
-    }
-    if civitai_token is not None:
-        headers['Authorization'] = f'Basic {civitai_token}'
+    
     queryPage = f'https://civitai.com/api/v1/models/{model_id}'
     r = requests.get(queryPage, headers=headers)
     if str(r.status_code) == '200': # Not sure if it gets returned as str or int
@@ -117,7 +162,7 @@ def download_models(metadata: dict, skip_duplicates = True, models_folder = "mod
 
                 print(f"Downloading model file for {modelName}\nURL: {model_file['downloadUrl']}")
 
-                r = requests.get(model_file['downloadUrl'], stream=True)
+                r = requests.get(model_file['downloadUrl'], stream=True, headers=headers)
                 total_size_in_bytes= int(r.headers.get('content-length', 0))
                 block_size = 1024 #1 Kibibyte
                 progress_bar = tqdm.tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
@@ -208,7 +253,7 @@ def download_imgs(metadata: dict, skip_duplicates = True, redownload_corrupted =
 
             # Finally saves the image
             print(f"Model: {modelName}\nDownloading {url}")
-            r = requests.get(url, stream=True)
+            r = requests.get(url, stream=True, headers=headers)
             total_size_in_bytes= int(r.headers.get('content-length', 0))
             block_size = 1024 #1 Kibibyte
             progress_bar = tqdm.tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
@@ -223,25 +268,14 @@ def download_imgs(metadata: dict, skip_duplicates = True, redownload_corrupted =
 cwd = get_working_dir()
 os.chdir(cwd)
 
-# Basic config
-models_folder = "models" # This doesn't work with full paths. It will just change the folder name.
-civitai_token = None # If you want to increase your rate limits on Civitai, get your API token (from account setings) and put it there as a string
-# Please be careful if you are using it and plan to do a push request.
-
-# Metadata Options
-updated_metadata = True
-backup_metadata = True
-
-# Models Options
-skip_duplicate_models = True
-use_subfolder = False # This will save models (.safetensors, .ckpt etc) under a subfolder named "files"
-
-# Image Options
-skip_duplicate_images = True
-redownload_corrupted = False # Most of times corrupted files don't exist on Civitai anymore, but the API still return them when you request the model's metadata
 
 
 while True:
+    if sys.argv == 2: 
+        init(sys.argv[1]) # Initialization (read configuration file and prepare request headers)
+    else:
+        init("config.ini")
+        
     url_or_id = input("Enter the model URL or ID (separate multiple models with a comma):\n")
 
     url_or_id_list = url_or_id.split(',')
