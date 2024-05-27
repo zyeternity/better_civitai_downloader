@@ -52,5 +52,5 @@ use_subfolder=False
 skip_duplicate_images=True
 # Most of times corrupted files don't exist on Civitai anymore, but the API still return them when you request the model's metadata
 redownload_corrupted=False 
-metadata```
+```
 
